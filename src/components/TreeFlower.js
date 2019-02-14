@@ -1,0 +1,110 @@
+import React from 'react'
+import PropTypes from 'prop-types'
+import * as d3 from 'd3'
+
+import { deg2rad, rad2deg, getNeighbours, getAlphaRadial, createPetalTree,
+    getCirclePosX, getCirclePosY, createCircles, createRootNode } from './helpers'
+
+const MARKER_SIZE = 20
+
+class TreeFlower extends React.Component {
+
+    constructor(props) {
+        super(props)
+        this.tick = this.tick.bind(this)
+        this.rerender = this.rerender.bind(this)
+    }
+
+    componentDidMount() {
+        this.rootSvg = d3.select(this.svg)
+        this.helperLines = this.rootSvg.append('g')
+        this.neighbourPatels = this.rootSvg.append('g')
+        this.marker = this.rootSvg.append('path')
+                                .attr('transform', `translate(100, 100)`)
+                                .attr('d', d3.symbol().size(0.5 * MARKER_SIZE * MARKER_SIZE).type(d3.symbolTriangle))
+                                .attr('fill', 'white')
+        this.rootSvg.append('circle')
+        this.initialRender = true
+        this.rerender(this.props)
+    }
+
+    shouldComponentUpdate(nextProps) {
+        if (this.initialRender) {
+            this.rerender(nextProps)
+        }
+        return true
+
+    }
+
+    tick() {
+        const u =this.neighbourPatels
+            .selectAll('circle')
+            .data(this.rootNode.concat(this.petals))
+
+        u.enter()
+            .append('circle')
+            .merge(u)
+            .attr('r', d => d.radius)
+            .attr('cx', function(d) {
+            return d.x
+            })
+            .attr('cy', function(d) {
+            return d.y
+            })
+            .on('mouseover', (d, i) => {
+                if (i > 0) {
+                    const x = getCirclePosX(this.rootRadius - (MARKER_SIZE * 0.5), d.linkAngle,this.center)
+                    const y = getCirclePosY(this.rootRadius - (MARKER_SIZE * 0.5), d.linkAngle,this.center)
+                    this.marker.attr('transform',
+                    `translate(${x}, ${y}) rotate(${d.linkAngle})`) 
+                }
+            })
+
+        u.exit().remove()
+    }
+
+    rerender(nextProps) {
+        const {size, data} = nextProps
+        this.center = size * 0.5
+        this.rootRadius = size * 0.28 * 0.5
+        const firstRadius = this.rootRadius * 0.43
+        // const secondSize = rootSize * 27
+        // const thirdSize = rootSize * 13 
+        // const fourthSize = rootSize * 9
+
+        this.rootNode = createRootNode(this.rootRadius, this.center)
+
+        const { petals, links } = createPetalTree(data, this.rootRadius, this.center)
+        this.petals = petals
+        this.links = links
+
+        this.spawned = this.neighbourPatels
+                            .selectAll('circle')
+
+        const simulation = d3.forceSimulation(this.rootNode.concat(this.petals))
+                            .force("link", d => (d.target) ? d3.forceLink().id(d.target).distance(10) : '')
+                            .force('collision', d3.forceCollide().radius(d => d.radius))
+                            // .force('forceX', d3.forceX((d, i) => getCirclePosX(this.rootRadius, d.linkAngle,this.center)).strength(0.05))
+                            // .force('forceY', d3.forceY((d, i) => getCirclePosY(this.rootRadius, d.linkAngle,this.center)).strength(0.05))
+                            .on('tick', this.tick)
+    }
+
+    render() {
+        const { size } = this.props
+        return (
+            <svg
+                width={size}
+                height={size}
+                ref={(ref) => {this.svg = ref}}
+            >
+            </svg>
+        )
+    }
+}
+
+TreeFlower.propTypes = {
+    size: PropTypes.number.isRequired,
+    data: PropTypes.array.isRequired,
+}
+
+export default TreeFlower
