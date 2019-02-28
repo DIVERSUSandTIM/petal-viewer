@@ -65,6 +65,16 @@ class Settings extends React.Component {
                         />
                         <label htmlFor="third"> Tree Petals</label>
                     </div>
+                    <div style={style}>
+                        <input
+                            type="radio"
+                            id="third"
+                            value={METHODS[4]}
+                            checked={selected === METHODS[4]}
+                            onChange={this.onRadioChanged}
+                        />
+                        <label htmlFor="third"> Tree Petals Complex</label>
+                    </div>
                 </fieldset>
             </div>
         )

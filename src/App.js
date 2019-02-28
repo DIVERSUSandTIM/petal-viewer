@@ -2,10 +2,9 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import './App.css'
 
-// import Flower from './components/Flower'
-import ForceFlower from './components/ForceFlower'
-import TreeFlower from './components/TreeFlower'
-import Flower from './components/Flower'
+import Flower from './components/flower/Flower'
+import ForceFlower from './components/forceflower/ForceFlower'
+import TreeFlower from './components/treeflower/TreeFlower'
 import Settings from './components/Settings'
 
 import { METHODS } from './actions/settings'
@@ -42,23 +41,29 @@ class App extends Component {
         {settings.selected === METHODS[0] &&
           <Flower
             size={(width < height) ? width : height}
+            width={width}
+            height={height}
             data={data}
           />
         }
         {(settings.selected === METHODS[1] ||  settings.selected === METHODS[2]) &&
           <ForceFlower
             size={(width < height) ? width : height}
+            width={width}
+            height={height}
             data={data}
             fixed={settings.selected === METHODS[2]}
           />
         }
-        {settings.selected === METHODS[3] &&
+        {(settings.selected === METHODS[3] || settings.selected === METHODS[4]) &&
           <TreeFlower
             size={(width < height) ? width : height}
+            width={width}
+            height={height}
             data={data}
+            complex={settings.selected === METHODS[4]}
           />
         }
-
         <Settings
           selected={settings.selected}
           dispatch={dispatch}
@@ -73,4 +78,4 @@ function mapStateToProps(state) {
   return { data, settings, dispatch }
 }
 
-export default connect(mapStateToProps)(App);
+export default connect(mapStateToProps)(App)

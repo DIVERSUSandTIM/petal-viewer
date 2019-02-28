@@ -2,12 +2,13 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import * as d3 from 'd3'
 
-import { deg2rad, rad2deg, getNeighbours, getAlphaRadial, createPetalTree,
-    getCirclePosX, getCirclePosY, createCircles, createRootNode } from './helpers'
+import { createPetalTree, getCirclePosX, getCirclePosY, createRootNode } from '../DefaultFunctions'
 
+import { createPetalTreeComplex } from '../BinaryTree'
+ 
 const MARKER_SIZE = 20
 
-class ForceFlower extends React.Component {
+class TreeFlower extends React.Component {
 
     constructor(props) {
         super(props)
@@ -37,16 +38,17 @@ class ForceFlower extends React.Component {
     }
 
     tick() {
-        const u =this.neighbourPatels
+        const data = this.rootNode.concat(this.petals)
+        const u = this.neighbourPatels
             .selectAll('circle')
-            .data(this.rootNode.concat(this.petals))
+            .data(data)
 
         u.enter()
             .append('circle')
             .merge(u)
             .attr('r', d => d.radius)
             .attr('cx', function(d) {
-            return d.x
+                return d.x
             })
             .attr('cy', function(d) {
             return d.y
@@ -64,35 +66,34 @@ class ForceFlower extends React.Component {
     }
 
     rerender(nextProps) {
-        const {size, data, fixed} = nextProps
+        const {size, data, complex} = nextProps
         this.center = size * 0.5
         this.rootRadius = size * 0.28 * 0.5
-        const firstRadius = this.rootRadius * 0.43
-        // const secondSize = rootSize * 27
-        // const thirdSize = rootSize * 13 
-        // const fourthSize = rootSize * 9
+
 
         this.rootNode = createRootNode(this.rootRadius, this.center)
-
-        if (fixed) {
-            const { petals } = createPetalTree(data, this.rootRadius, this.center)
+        if (complex) {
+            const { petals, links } = createPetalTreeComplex(data, this.rootRadius, this.center)
             this.petals = petals
+            this.links = links
+            d3.forceSimulation(this.rootNode.concat(this.petals))
+            .force("link", d3.forceLink().links(this.links).id(d => d.id).distance(35).strength(0.9))
+            .force('collision', d3.forceCollide().radius(d => d.radius).iterations(2))
+            // .velocityDecay(0.5)
+            .on('tick', this.tick)
         } else {
-            this.petals = createCircles(data, this.rootRadius, this.center)
+            const { petals, links } = createPetalTree(data, this.rootRadius, this.center)
+            this.petals = petals
+            this.links = links
+            d3.forceSimulation(this.rootNode.concat(this.petals))
+            .force("link", d3.forceLink().links(this.links).id(d => d.id).distance(50).strength(0.1))
+            .force('collision', d3.forceCollide().radius(d => d.radius))
+            .on('tick', this.tick)
         }
-
-        this.spawned = this.neighbourPatels
-                            .selectAll('circle')
-
-        const simulation = d3.forceSimulation(this.rootNode.concat(this.petals))
-                            .force('collision', d3.forceCollide().radius(d => d.radius))
-                            .force('forceX', d3.forceX((d, i) => getCirclePosX(this.rootRadius, d.linkAngle,this.center)).strength(0.05))
-                            .force('forceY', d3.forceY((d, i) => getCirclePosY(this.rootRadius, d.linkAngle,this.center)).strength(0.05))
-                            .on('tick', this.tick)
     }
 
     render() {
-        const { size } = this.props
+        const { width, height, size } = this.props
         return (
             <svg
                 width={size}
@@ -104,10 +105,12 @@ class ForceFlower extends React.Component {
     }
 }
 
-ForceFlower.propTypes = {
+TreeFlower.propTypes = {
     size: PropTypes.number.isRequired,
+    width: PropTypes.number.isRequired,
+    height: PropTypes.number.isRequired,
     data: PropTypes.array.isRequired,
-    fixed: PropTypes.bool.isRequired,
+    complex: PropTypes.bool.isRequired,
 }
 
-export default ForceFlower
+export default TreeFlower

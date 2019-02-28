@@ -4,7 +4,8 @@ export const METHODS = [
     "CALCULATED",
     "NAIVE",
     "FIXED",
-    "TREE"
+    "TREE",
+    "TREE COMPLEX"
 ]
 
 export function changeMethod(method) {

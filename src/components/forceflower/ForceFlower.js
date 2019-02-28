@@ -2,12 +2,12 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import * as d3 from 'd3'
 
-import { deg2rad, rad2deg, getNeighbours, getAlphaRadial, createPetalTree,
-    getCirclePosX, getCirclePosY, createCircles, createRootNode } from './helpers'
+import {  createPetalTree, getCirclePosX, getCirclePosY,
+    createCircles, createRootNode } from '../DefaultFunctions'
 
 const MARKER_SIZE = 20
 
-class TreeFlower extends React.Component {
+class ForceFlower extends React.Component {
 
     constructor(props) {
         super(props)
@@ -64,33 +64,31 @@ class TreeFlower extends React.Component {
     }
 
     rerender(nextProps) {
-        const {size, data} = nextProps
+        const {size, data, fixed} = nextProps
         this.center = size * 0.5
         this.rootRadius = size * 0.28 * 0.5
-        const firstRadius = this.rootRadius * 0.43
-        // const secondSize = rootSize * 27
-        // const thirdSize = rootSize * 13 
-        // const fourthSize = rootSize * 9
 
         this.rootNode = createRootNode(this.rootRadius, this.center)
 
-        const { petals, links } = createPetalTree(data, this.rootRadius, this.center)
-        this.petals = petals
-        this.links = links
+        if (fixed) {
+            const { petals } = createPetalTree(data, this.rootRadius, this.center)
+            this.petals = petals
+        } else {
+            this.petals = createCircles(data, this.rootRadius, this.center)
+        }
 
         this.spawned = this.neighbourPatels
                             .selectAll('circle')
 
-        const simulation = d3.forceSimulation(this.rootNode.concat(this.petals))
-                            .force("link", d => (d.target) ? d3.forceLink().id(d.target).distance(10) : '')
-                            .force('collision', d3.forceCollide().radius(d => d.radius))
-                            // .force('forceX', d3.forceX((d, i) => getCirclePosX(this.rootRadius, d.linkAngle,this.center)).strength(0.05))
-                            // .force('forceY', d3.forceY((d, i) => getCirclePosY(this.rootRadius, d.linkAngle,this.center)).strength(0.05))
-                            .on('tick', this.tick)
+        d3.forceSimulation(this.rootNode.concat(this.petals))
+            .force('collision', d3.forceCollide().radius(d => d.radius))
+            .force('forceX', d3.forceX((d, i) => getCirclePosX(this.rootRadius, d.linkAngle,this.center)).strength(0.05))
+            .force('forceY', d3.forceY((d, i) => getCirclePosY(this.rootRadius, d.linkAngle,this.center)).strength(0.05))
+            .on('tick', this.tick)
     }
 
     render() {
-        const { size } = this.props
+        const { width, height, size } = this.props
         return (
             <svg
                 width={size}
@@ -102,9 +100,12 @@ class TreeFlower extends React.Component {
     }
 }
 
-TreeFlower.propTypes = {
+ForceFlower.propTypes = {
     size: PropTypes.number.isRequired,
+    width: PropTypes.number.isRequired,
+    height: PropTypes.number.isRequired,
     data: PropTypes.array.isRequired,
+    fixed: PropTypes.bool.isRequired,
 }
 
-export default TreeFlower
+export default ForceFlower

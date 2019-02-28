@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import * as d3 from 'd3'
 
-import { deg2rad, rad2deg, getNeighbours, getAlphaRadial, getCirclePosX, getCirclePosY } from './helpers'
+import { rad2deg, getNeighbours, getAlphaRadial, getCirclePosX, getCirclePosY } from '../DefaultFunctions'
 
 class Flower extends React.Component {
 
@@ -21,8 +21,6 @@ class Flower extends React.Component {
 
         const alpha = getAlphaRadial(1, 0.43)
         this.firstNeighbours = getNeighbours(this.props.data, rad2deg(alpha))
-        console.log(this.props.data)
-        console.log(this.firstNeighbours)
         this.rerender(this.props)
     }
 
@@ -39,9 +37,6 @@ class Flower extends React.Component {
         const center = size * 0.5
         const rootRadius = size * 0.28 * 0.5
         const firstRadius = rootRadius * 0.43
-        // const secondSize = rootSize * 27
-        // const thirdSize = rootSize * 13 
-        // const fourthSize = rootSize * 9
 
         this.helperLines.append('line')
                     .attr('x1', center)
@@ -69,7 +64,7 @@ class Flower extends React.Component {
     }
 
     render() {
-        const { size } = this.props
+        const { width, height, size } = this.props
         return (
             <svg
                 width={size}
@@ -83,6 +78,8 @@ class Flower extends React.Component {
 
 Flower.propTypes = {
     size: PropTypes.number.isRequired,
+    width: PropTypes.number.isRequired,
+    height: PropTypes.number.isRequired,
     data: PropTypes.array.isRequired,
 }
 
