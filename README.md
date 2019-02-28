@@ -1,6 +1,6 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-Preview is available [here](https://objective-euler-3ae62b.netlify.com)
+Preview is available [here](https://diversus-flower.netlify.com)
 
 ## Available Scripts
 
